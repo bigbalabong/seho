@@ -1,0 +1,40 @@
+<menuDocument>
+    <menu>
+
+
+
+
+<!--####################################################################-->
+<!--############################### SEAN ###############################-->
+<!--####################################################################-->
+
+<!--~~~~~~~~~~~~ Blend Parms ~~~~~~~~~~~~~-->
+    <subMenu id="sean_parmMenu_blendParms">
+        <label>Blend Parms</label>
+
+        <scriptMenuStripDynamic id="sean_parmMenuItems_blendParms">
+
+            <contentsScriptCode><![CDATA[
+import seho
+return hou.Parm.ContextMenu( kwargs ).MenuItems_BlendParms
+]]></contentsScriptCode>
+
+            <scriptCode><![CDATA[
+import seho
+hou.Parm.ContextMenu( kwargs )._exec()
+]]></scriptCode>
+
+        </scriptMenuStripDynamic>
+
+    </subMenu>
+
+
+<!--####################################################################-->
+<!--####################################################################-->
+<!--####################################################################-->
+
+
+
+    </menu>
+</menuDocument>
+
