@@ -148,6 +148,19 @@ setAttr( hou.Node, "Input3", property( _node_getInput3 ) )
 setAttr( hou.Node, "OutputNodes", property( hou.Node.outputs ) )
 setAttr( hou.Node, "Outputs", hou.Node.OutputNodes )
 
+def _node_getOutput0( self ):
+    """[summary]
+
+    Returns:
+        [hou.Node]: [description]
+
+    Author: Sean
+    """
+    nodes = self.Outputs
+    if nodes:
+        return nodes[0]
+setAttr( hou.Node, "Output0", property( _node_getOutput0 ) )
+
 setAttr( hou.Node, "OutputNames", property( hou.Node.outputNames ) )
 setAttr( hou.Node, "OutputLabels", property( hou.Node.outputLabels ) )
 
@@ -192,7 +205,7 @@ class NodePort( object ):
                         NOTE: This number should not be out of range.
 
         Example 1:
-            a, b = seho.lss()
+            a, b = hou.lss()
             a.Out1 >> b.In0
 
         Author: Sean

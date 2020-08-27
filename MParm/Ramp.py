@@ -7,10 +7,73 @@ from ..MVar import *
 
 
 
+###########################################################################
+################################### Parm ##################################
+###########################################################################
 
-# ======================================================== #
-# ================== Ramp Parm Template ================== #
-# ======================================================== #
+def _parm_getRampIndex( self ):
+    """
+    Ramp Index starts from 1.
+
+    Returns:
+        [int]: [description]
+    
+    Author: Sean
+    """
+    name = self.Name
+
+    digits_suffix = re.search( r'\d*\D*\Z', name )
+        
+    if not digits_suffix:
+        return
+
+    digits = re.search( r'\A\d*', digits_suffix.group() ).group()
+    suffix = name.rsplit( digits, 1 )[1]
+
+    if suffix not in ('pos', 'value', 'interp'):
+        return
+
+    return int( digits )
+setAttr( hou.Parm, "RampKeyIndex", property( _parm_getRampIndex ), replace=True )
+
+
+def _parm_getRampPeers( self ):
+    index = self.RampKeyIndex
+
+    if not index:
+        return
+
+    name_base = self.Name.rsplit( str(index), 1 )[0] + str(index)
+    peers = ( 
+                '{}pos'.format( name_base ),
+                '{}value'.format( name_base ),
+                '{}interp'.format( name_base ),
+            )
+    peers = [ self.Node.parm( i ) for i in peers ]
+    return peers
+setAttr( hou.Parm, "RampKeyPeers", property( _parm_getRampPeers ), replace=True )
+
+
+def _parm_getRampParm( self ):
+    index = self.RampKeyIndex
+
+    if not index:
+        return
+
+    ramp_parmname = self.Name.rsplit( str(index), 1 )[0]
+    ramp_parm = self.Node._[ramp_parmname]
+    return ramp_parm
+setAttr( hou.Parm, "RampParm", property( _parm_getRampParm ), replace=True )
+
+
+
+
+
+
+
+###########################################################################
+############################ Ramp Parm Template ###########################
+###########################################################################
 '''
 hou.RampParmTemplate    http://www.sidefx.com/docs/houdini/hom/hou/RampParmTemplate.html
 
@@ -58,9 +121,19 @@ setAttr( hou.RampParmTemplate, "DefaultBasis",
 
 
 
+
+###########################################################################
+################################### Ramp ##################################
+###########################################################################
+
 '''
 hou.Ramp            http://www.sidefx.com/docs/houdini/hom/hou/Ramp.html
 '''
+_RampBasis_MenuItems = [('constant', 'Constant'), ('linear', 'Linear'), ('catmull-rom', 'Catmull-Rom'), ('monotonecubic', 'Monotone Cubic'), ('bezier', 'Bezier'), ('bspline', 'B-Spline'), ('hermite', 'Hermite')]
+# _RampBasis_MenuItems = ('Constant', 'constant', 'Linear', 'linear', 'Catmull-Rom', 'catmull-rom', 'Monotone Cubic', 'monotonecubic', 'Bezier', 'bezier', 'B-Spline', 'bspline', 'Hermite', 'hermite')
+setAttr( hou.Ramp, "MenuItems", _RampBasis_MenuItems, replace=True )
+
+
 def _ramp_setColorType( self, color_type='RGB' ):
     """
     Author: Sean
@@ -101,13 +174,13 @@ def _ramp_getKey( self, index ):
 
     parm = self.Parm.Name
     node = self.Parm.Node
-    parms = [   node['{}{}pos'.format( parm, index +1 )], 
-                node['{}{}value'.format( parm, index +1 )], 
-                node['{}{}interp'.format( parm, index +1 )] ]
+    parms = [   node._['{}{}pos'.format( parm, index +1 )], 
+                node._['{}{}value'.format( parm, index +1 )], 
+                node._['{}{}interp'.format( parm, index +1 )] ]
 
     return RampKey( self, index, *parms )
-setAttr( hou.Ramp, 'key', _ramp_getKey )
-setAttr( hou.Ramp, '__getitem__', _ramp_getKey )
+setAttr( hou.Ramp, 'key', _ramp_getKey, replace=True )
+setAttr( hou.Ramp, '__getitem__', _ramp_getKey, replace=True )
 
 
 def _ramp_getKeys( self ):
@@ -120,25 +193,22 @@ def _ramp_getKeys( self ):
     node = self.Parm.Node
     parms = []
     for i in range(num):
-        parms.append([  node['{}{}pos'.format( parm, i +1 )], 
-                        node['{}{}value'.format( parm, i +1 )], 
-                        node['{}{}interp'.format( parm, i +1 )] ])
+        parms.append([  node._['{}{}pos'.format( parm, i +1 )], 
+                        node._['{}{}value'.format( parm, i +1 )], 
+                        node._['{}{}interp'.format( parm, i +1 )] ])
 
     keys = []
     for index, related_parms in enumerate( parms ):
         keys.append( RampKey( self, index, *related_parms ) )
 
     return keys
-setAttr( hou.Ramp, "Keys", property( _ramp_getKeys ) )
+setAttr( hou.Ramp, "Keys", property( _ramp_getKeys ), replace=True )
 
 setAttr( hou.Ramp, "Values", property( hou.Ramp.values ) )
 
 setAttr( hou.Ramp, "Basis", property( hou.Ramp.basis ) )
 
 
-# hou.Ramp.insertBefore
-
-# hou.Ramp.insertAfter
 
 
 def _ramp_update( self ):
@@ -146,7 +216,16 @@ def _ramp_update( self ):
     Author: Sean
     """
     self.Parm.Value = self
-hou.Ramp.update = _ramp_update
+setAttr( hou.Ramp, "update", _ramp_update )
+
+
+def _ramp_evenlySpaced( self ):
+    keys = self.Keys
+    num = len(keys)
+    for i, key in enumerate( keys ):
+        key.P = float(i) / (num-1)
+setAttr( hou.Ramp, "evenlySpaced", _ramp_evenlySpaced, replace=True )
+
 
 
 
@@ -166,6 +245,8 @@ class RampKey( object ):
         self.ParmPos = parm_pos
         self.ParmValue = parm_value
         self.ParmBasis = parm_basis
+
+        self.Parms = (parm_pos, parm_value, parm_basis)
 
 
     @property
@@ -206,8 +287,23 @@ class RampKey( object ):
 
 
 
+    @property
+    def Value( self ):
+        return self.ParmValue._
+
+    @Value.setter
+    def Value( self, value ):
+        self.ParmValue._ = value
 
 
+
+    @property
+    def Basis( self ):
+        return self.ParmBasis.Raw
+
+    @Basis.setter
+    def Basis( self, basis ):
+        self.ParmBasis._ = basis
 
 
 

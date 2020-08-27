@@ -106,8 +106,21 @@ from . import Gallery
 reload(Gallery)
 
 
+
+
+from . import SubnetInput
+reload(SubnetInput)
+
+
+from . import Dot
+reload(Dot)
+
+
+
+
 from . import Shortcut
 reload(Shortcut)
+
 
 
 

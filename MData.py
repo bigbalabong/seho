@@ -88,15 +88,27 @@ setAttr( hou.Vector2, "Length2", property( hou.Vector2.lengthSquared ) )
 
 
 
+
+
 '''
 hou.Vector3     https://www.sidefx.com/docs/houdini/hom/hou/Vector3.html
 '''
-setAttr( hou.Vector3, "X", property( hou.Vector3.x ) )
-setAttr( hou.Vector3, "Y", property( hou.Vector3.y ) )
-setAttr( hou.Vector3, "Z", property( hou.Vector3.z ) )
+def _vec3_setX( self, value ):
+    self[0] = value
+setAttr( hou.Vector3, "X", property( hou.Vector3.x, _vec3_setX ), replace=True )
+
+def _vec3_setY( self, value ):
+    self[1] = value
+setAttr( hou.Vector3, "Y", property( hou.Vector3.y, _vec3_setY ), replace=True )
+
+def _vec3_setZ( self, value ):
+    self[2] = value
+setAttr( hou.Vector3, "Z", property( hou.Vector3.z, _vec3_setZ ), replace=True )
 
 setAttr( hou.Vector3, "Length", property( hou.Vector3.length ) )
 setAttr( hou.Vector3, "Length2", property( hou.Vector3.lengthSquared ) )
+
+
 
 
 
@@ -154,6 +166,7 @@ setAttr( hou.Quaternion, "Rotation",
 ###########################################################################
 ################################## Matrix #################################
 ###########################################################################
+
 def _matrix_ident( cls ):
     """
     Author: Sean
@@ -191,9 +204,32 @@ setAttr( hou.Matrix4, "Axes", property( _matrix_getAxes ), replace=False )
 
 
 
+
 '''
 hou.Matrix2     https://www.sidefx.com/docs/houdini/hom/hou/Matrix2.html
 '''
+def _matrix2_getitem( self, index ):
+    """
+    Get element by index.
+
+    Args:
+        index ([type]): [description]
+
+    Returns:
+        [float]: [description]
+
+    As long as the class has __getitem__ method, you can use list() to flatten its instance.
+        e.g. list( hou.Matrix2.ident() )
+                Returns: [1.0, 0.0, 0.0, 1.0]
+
+    Author: Sean
+    """
+    row = index / 2
+    column = index % 2
+    return self.at( row, column )
+setAttr( hou.Matrix2, '__getitem__', _matrix2_getitem )
+
+
 setAttr( hou.Matrix2, "Determinant", property( hou.Matrix2.determinant ) )
 setAttr( hou.Matrix2, "Inverted", property( hou.Matrix2.inverted ) )
 setAttr( hou.Matrix2, "Transposed", property( hou.Matrix2.transposed ) )
@@ -202,12 +238,36 @@ setAttr( hou.Matrix2, "Transposed", property( hou.Matrix2.transposed ) )
 
 
 
+
 '''
 hou.Matrix3     https://www.sidefx.com/docs/houdini/hom/hou/Matrix3.html
 '''
+def _matrix3_getitem( self, index ):
+    """
+    Get element by index.
+
+    Args:
+        index ([type]): [description]
+
+    Returns:
+        [float]: [description]
+
+    As long as the class has __getitem__ method, you can use list() to flatten its instance.
+        e.g. list( hou.Matrix3.ident() )
+                Returns: [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0]
+
+    Author: Sean
+    """
+    row = index / 3
+    column = index % 3
+    return self.at( row, column )
+setAttr( hou.Matrix3, '__getitem__', _matrix3_getitem )
+
+
 setAttr( hou.Matrix3, "Determinant", property( hou.Matrix3.determinant ) )
 setAttr( hou.Matrix3, "Inverted", property( hou.Matrix3.inverted ) )
 setAttr( hou.Matrix3, "Transposed", property( hou.Matrix3.transposed ) )
+
 
 
 
@@ -233,6 +293,28 @@ hou.Matrix4     https://www.sidefx.com/docs/houdini/hom/hou/Matrix4.html
         hou.Matrix4( matrix3 )
                 Returns: <hou.Matrix4 [[0, 1, 2, 0], [3, 4, 5, 0], [6, 7, 8, 0], [0, 0, 0, 1]]>
 '''
+def _matrix4_getitem( self, index ):
+    """
+    Get element by index.
+
+    Args:
+        index ([type]): [description]
+
+    Returns:
+        [float]: [description]
+
+    As long as the class has __getitem__ method, you can use list() to flatten its instance.
+        e.g. list( hou.Matrix4.ident() )
+                Returns: [1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0]
+
+    Author: Sean
+    """
+    row = index / 4
+    column = index % 4
+    return self.at( row, column )
+setAttr( hou.Matrix4, '__getitem__', _matrix4_getitem )
+
+
 setAttr( hou.Matrix4, "Determinant", property( hou.Matrix4.determinant ) )
 setAttr( hou.Matrix4, "Inverted", property( hou.Matrix4.inverted ) )
 setAttr( hou.Matrix4, "Transposed", property( hou.Matrix4.transposed ) )

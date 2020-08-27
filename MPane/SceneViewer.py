@@ -835,7 +835,7 @@ def _selection_newAABB( self, obb=False ):
         bound._['orientedbbox']._ = True
 
     return bound
-setAttr( hou.Selection, 'newAABB', _selection_newAABB, replace=True )
+setAttr( hou.Selection, 'newAABB', _selection_newAABB, replace=False )
 
 def _selection_newOBB( self ):
     return self.newAABB( True )

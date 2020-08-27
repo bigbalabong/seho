@@ -84,7 +84,7 @@ setAttr( hou.ParmTemplate, "Folder", property( hou.ParmTemplate.help, hou.ParmTe
 setAttr( hou.ParmTemplate, "Hidden", property( hou.ParmTemplate.isHidden, hou.ParmTemplate.hide ) )
 
 
-
+'''
 def _parmTemplate_joinWithNext( self, parm=None ):
     """
     Author: Sean
@@ -94,7 +94,7 @@ def _parmTemplate_joinWithNext( self, parm=None ):
     else:
         self.setJoinWithNext( False )
 setAttr( hou.ParmTemplate, '__rshift__', _parmTemplate_joinWithNext )
-
+'''
 
 
 
@@ -467,27 +467,46 @@ setAttr( hou.FolderSetParmTemplate, "FolderType",
 '''
 hou.ParmTemplateGroup       http://www.sidefx.com/docs/houdini/hom/hou/ParmTemplateGroup.html
 '''
+def _parmTmpGrp_index( self, parm_template ):
+    return self.findIndices( parm_template )
+setAttr( hou.ParmTemplateGroup, "index", _parmTmpGrp_index )
 
-def _parmTemplateGrp_insertAtTop( self, parm_template ):
+
+def _parmTmpGrp_append( self, parm_templates ):
+    """
+    Append parm templates.
+
+    Args:
+        parm_templates (list of hou.ParmTemplate): [description]
+    """
+    if not isSequence( parm_templates ):
+        parm_templates = ( parm_templates, )
+
+    for tmp in parm_templates:
+        self.append( tmp )
+setAttr( hou.ParmTemplateGroup, "__lshift__", _parmTmpGrp_append )
+
+
+def _parmTmpGrp_insertAtTop( self, parm_template ):
     """
     Author: Sean
     """
     first_tmp = self.ParmTemplates[0]
     self.insertBefore( first_tmp, parm_template )
-setAttr( hou.ParmTemplateGroup, 'insertAtTop', _parmTemplateGrp_insertAtTop )
+setAttr( hou.ParmTemplateGroup, "insertAtTop", _parmTmpGrp_insertAtTop )
 
 
-def _parmTemplateGrp_apply( self ):
+def _parmTmpGrp_apply( self, auto_rename=True ):
     """
     Change the spare parameters for this node.
     
     Author: Sean
     """
-    self.Node.setParmTemplateGroup( self )
-setAttr( hou.ParmTemplateGroup, "apply", _parmTemplateGrp_apply )
+    self.Node.setParmTemplateGroup( self, rename_conflicting_parms=auto_rename )
+setAttr( hou.ParmTemplateGroup, "apply", _parmTmpGrp_apply, replace=True )
 
 
-def _parmTemplateGrp_applyToHDA( self ):
+def _parmTmpGrp_applyToHDA( self ):
     """
     Change the parameters for this digital asset.
     The HDA dosn't need to be unlocked.
@@ -495,7 +514,7 @@ def _parmTemplateGrp_applyToHDA( self ):
     Author: Sean
     """
     self.Node.HDA.setParmTemplateGroup( self )
-setAttr( hou.ParmTemplateGroup, "applyToHDA", _parmTemplateGrp_applyToHDA )
+setAttr( hou.ParmTemplateGroup, "applyToHDA", _parmTmpGrp_applyToHDA )
 
 
 

@@ -17,11 +17,70 @@ hou.Geometry        https://www.sidefx.com/docs/houdini/hom/hou/Geometry.html
 
 setAttr( hou.Geometry, 'Node', property( hou.Geometry.sopNode ) )
 
+
+
+
+# ======================================================== #
+# ====================== Basic Info ====================== #
+# ======================================================== #
+def _geo_getMemory( self ):
+    return self.intrinsicValue( 'memoryusage' )
+setAttr( hou.Geometry, 'Memory', property( _geo_getMemory ) )
+
+
+
+
+
+# ======================================================== #
+# ========================= Count ======================== #
+# ======================================================== #
+def _geo_getNumPoints( self ):
+    return self.intrinsicValue( 'pointcount' )
+setAttr( hou.Geometry, 'NumPoints', property( _geo_getNumPoints ) )
+
+def _geo_getNumVertices( self ):
+    return self.intrinsicValue( 'vertexcount' )
+setAttr( hou.Geometry, 'NumVertices', property( _geo_getNumVertices ) )
+
+def _geo_getNumPrims( self ):
+    return self.intrinsicValue( 'primitivecount' )
+setAttr( hou.Geometry, 'NumPrims', property( _geo_getNumPrims ) )
+
+
+
+
+
+# ======================================================== #
+# ========================= Group ======================== #
+# ======================================================== #
+def _geo_getPointGroupNames( self ):
+    return self.intrinsicValue( 'pointgroups' )
+setAttr( hou.Geometry, 'PointGroupNames', property( _geo_getPointGroupNames ) )
+
+def _geo_getVertexGroupNames( self ):
+    return self.intrinsicValue( 'vertexgroups' )
+setAttr( hou.Geometry, 'VertexGroupNames', property( _geo_getVertexGroupNames ) )
+
+def _geo_getEdgeGroupNames( self ):
+    return self.intrinsicValue( 'edgegroups' )
+setAttr( hou.Geometry, 'EdgeGroupNames', property( _geo_getEdgeGroupNames ) )
+
+def _geo_getPrimGroupNames( self ):
+    return self.intrinsicValue( 'primitivegroups' )
+setAttr( hou.Geometry, 'PrimGroupNames', property( _geo_getPrimGroupNames ) )
+
+
+
+
+
+
+
+
+# ======================================================== #
+# ===================== Bounding Box ===================== #
+# ======================================================== #
 setAttr( hou.Geometry, 'Bound', property( hou.Geometry.boundingBox ) )
 setAttr( hou.Geometry, 'BB', hou.Geometry.Bound )
-
-
-
 
 
 
@@ -50,6 +109,8 @@ def _geo_getMaterials( self ):
         return [ hou.node(i) for i in mat_paths ]
 setAttr( hou.Geometry, 'Materials', property( _geo_getMaterials ) )
 setAttr( hou.Geometry, 'Mats', hou.Geometry.Materials )
+
+
 
 
 
@@ -124,6 +185,8 @@ setAttr( hou.Edge, 'Prims', property( hou.Edge.prims ) )
 
 
 
+
+
 ###########################################################################
 ################################ Primitive ################################
 ###########################################################################
@@ -154,12 +217,19 @@ setAttr( hou.Prim, 'NumVertices', property( hou.Prim.numVertices ) )
 
 
 
+
+
+
 ###########################################################################
 #################################### UV ###################################
 ###########################################################################
 '''
 How do you get UV density and UV distortion as attributes?      https://forums.odforce.net/topic/25511-how-do-you-get-uv-density-and-uv-distortion-as-attributes/
 '''
+
+
+
+
 
 
 

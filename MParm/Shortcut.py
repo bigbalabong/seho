@@ -188,6 +188,20 @@ setAttr( hou.ParmTemplate, "ParmTemplateGrp", property( _parmTemplate_getParmTem
 ###########################################################################
 ########################## hou.ParmTemplateGroup ##########################
 ###########################################################################
+def _parmTmpGrp_getParmTemplate( self, name ):
+    if isinstance( name, int ):
+        index = (name,)
+        return self.entryAtIndices( index )
+
+    elif isSequence( name ) and isinstance( name[0], int ):
+        index = name
+        return self.entryAtIndices( index )
+
+    else:
+        return self.find( name )
+setAttr( hou.ParmTemplateGroup, "__getitem__", _parmTmpGrp_getParmTemplate, replace=True )
+
+
 def _parmTemplateGrp_getParmTemplates( self ):
     """
     Author: Sean

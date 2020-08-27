@@ -131,6 +131,8 @@ setAttr( hou.Parm, "Path", property( hou.Parm.path ) )
 
 def _parm_getIndex( self ):
     """
+    Get parm index in parm tuple.
+
     Author: Sean
     """
     if self.ParmTemplate.numComponents() == 1:
@@ -199,6 +201,28 @@ setAttr( hou.Parm, "AutoSelected", property( hou.Parm.isAutoSelected, hou.Parm.s
 
 
 # ======================================================== #
+# ======================== String ======================== #
+# ======================================================== #
+def _parm_stringToList( self ):
+    tmp = self.ParmTemplate
+    
+    if not isinstance( tmp, hou.StringParmTemplate ):
+        return
+
+    strings = [ i.strip() for i in self._.split( ' ' ) ]
+    strings = [ i for i in strings if i ]
+    return strings
+setAttr( hou.Parm, "toList", _parm_stringToList, replace=True )
+
+
+def _parm_stringToNode( self ):
+    return self.Node.node( self._ )
+setAttr( hou.Parm, "toNode", _parm_stringToNode, replace=False )
+
+
+
+
+# ======================================================== #
 # ========================= Menu ========================= #
 # ======================================================== #
 setAttr( hou.Parm, "MenuLabels", property( hou.Parm.menuLabels ) )
@@ -206,10 +230,92 @@ setAttr( hou.Parm, "MenuValues", property( hou.Parm.menuItems ) )
 
 def _parm_getMenuItems( self ):
     """
+    Examples:
+        hou.parm('/obj/geo1/sphere1/type').Value
+        # Returns: 0
+        hou.parm('/obj/geo1/sphere1/type').Raw
+        # Returns: 'prim'
+
     Author: Sean
     """
     return zip( self.MenuLabels, self.MenuValues )
 setAttr( hou.Parm, "MenuItems", property( _parm_getMenuItems ) )
+
+
+
+
+
+
+# ======================================================== #
+# ====================== Multi-parm ====================== #
+# ======================================================== #
+
+# ~~~~~~~~~~~~~~~ Multi-parm ~~~~~~~~~~~~~~ #
+
+def _parm_getMultiParmInstances( self ):
+    return self.multiParmInstances()
+setAttr( hou.Parm, "Instances", property( _parm_getMultiParmInstances ) )
+
+
+def _parm_getMultiParmInstanceGroups( self ):
+    instances = self.Instances
+
+    if not instances:
+        # return empty tuple
+        return instances
+
+    num = len( self.ParmTemplate.ParmTemplates )
+    return L_( instances ).group( num )
+setAttr( hou.Parm, "InstanceGrps", property( _parm_getMultiParmInstanceGroups ), replace=True )
+
+
+def _parm_getMultiParmInstanceGroupJustBorn( self ):
+    multiparm_tmps = self.ParmTemplate.ParmTemplates
+    justBorn_tmp = [ i for i in multiparm_tmps if i.Name.endswith( '__justBorn#' ) ]
+    
+    if not justBorn_tmp:
+        return
+
+    index = multiparm_tmps.index( justBorn_tmp[0] )
+
+    grps = [ i for i in self.InstanceGrps if i[index]._ == True ]
+    return grps
+setAttr( hou.Parm, "InstanceGrpsJustBorn", property( _parm_getMultiParmInstanceGroupJustBorn ), replace=True )
+
+
+
+
+# ~~~~~~~~~~ Multi-parm Instance ~~~~~~~~~~ #
+
+def _parm_getMultiParmInstanceIndexGlobal( self ):
+    if not self.isMultiParmInstance():
+        return
+
+    return self.multiParmInstanceIndices()[0]
+setAttr( hou.Parm, "InstanceIndexGlobal", property( _parm_getMultiParmInstanceIndexGlobal ), replace=True )
+
+
+def _parm_getMultiParmInstanceIndexLocal( self ):
+    if not self.isMultiParmInstance():
+        return
+
+    num = len( self.parentMultiParm().ParmTemplate.ParmTemplates )
+    index = self.multiParmInstanceIndices()[0]
+    return index % num
+setAttr( hou.Parm, "InstanceIndexLocal", property( _parm_getMultiParmInstanceIndexLocal ), replace=True )
+
+
+def _parm_getMultiParmInstanceGroupIndex( self ):
+    if not self.isMultiParmInstance():
+        return
+
+    num = len( self.parentMultiParm().ParmTemplate.ParmTemplates )
+    index = self.multiParmInstanceIndices()[0]
+    return index / num
+setAttr( hou.Parm, "InstanceGrpIndex", property( _parm_getMultiParmInstanceGroupIndex ), replace=True )
+
+
+
 
 
 
@@ -226,26 +332,46 @@ def _parm_getValue( self ):
     value = self.eval()
     
     if type( value ) is hou.Ramp:
-        value.Parm = self
+        setAttr( value, "Parm", self )
 
     return value
-setAttr( hou.Parm, "Value", property( _parm_getValue, hou.Parm.set ) )
-setAttr( hou.Parm, "_", hou.Parm.Value )
+
+def _parm_setValue( self, value ):
+    if isinstance( value, hou.Node ):
+        node = value
+
+        if isinstance( self.ParmTemplate, hou.StringParmTemplate ):
+            nodepath = self.Node.relativePathTo( node )
+            self.set( nodepath )
+
+    else:
+        self.set( value )
+
+setAttr( hou.Parm, "Value", property( _parm_getValue, _parm_setValue ), replace=True )
+setAttr( hou.Parm, "_", hou.Parm.Value, replace=True )
 
 
+
+"""
+Examples:
+    hou.parm('/obj/geo1/sphere1/type').Value
+    # Returns: 0
+    hou.parm('/obj/geo1/sphere1/type').Raw
+    # Returns: 'prim'
+"""
 setAttr( hou.Parm, "Raw", property( hou.Parm.rawValue ) )
 
 
 
 def _parm_getValueType( self ):
-    '''
+    """
     hou.parmData        http://www.sidefx.com/docs/houdini/hom/hou/parmData.html
 
-    RETURN:
+    Returns:
             (str) int / float / string / ramp
     
     Author: Sean
-    '''
+    """
     return self.ParmTemplate.DataType
 setAttr( hou.Parm, "DataType", property( _parm_getValueType ) )
 setAttr( hou.Parm, "ValueType", property( _parm_getValueType ) )
@@ -268,6 +394,55 @@ def _parm_getDefault( self ):
     index = self.Index
     return default[ index ]
 setAttr( hou.Parm, "Default", property( _parm_getDefault ), replace=False )
+
+
+
+# ~~~~~~~~~~~~~~ Value Range ~~~~~~~~~~~~~~ #
+def _parm_getMinimum( self ):
+    tmp = self.ParmTemplate
+
+    if type(tmp) not in ( hou.IntParmTemplate, hou.FloatParmTemplate ):
+        return
+
+    return tmp.Min
+
+def _parm_setMinimum( self, value ):
+    tmp = self.ParmTemplate
+
+    if type(tmp) not in ( hou.IntParmTemplate, hou.FloatParmTemplate ):
+        return
+
+    tmp.Min = value
+    tmp.apply()
+
+setAttr( hou.Parm, "Min", property( _parm_getMinimum, _parm_setMinimum ), replace=True)
+
+
+
+
+def _parm_getMaximum( self ):
+    tmp = self.ParmTemplate
+
+    if type(tmp) not in ( hou.IntParmTemplate, hou.FloatParmTemplate ):
+        return
+
+    return tmp.Max
+
+def _parm_setMaximum( self, value ):
+    tmp = self.ParmTemplate
+
+    if type(tmp) not in ( hou.IntParmTemplate, hou.FloatParmTemplate ):
+        return
+
+    tmp.Max = value
+    tmp.apply()
+
+setAttr( hou.Parm, "Max", property( _parm_getMaximum, _parm_setMaximum ), replace=True )
+
+
+
+
+
 
 
 

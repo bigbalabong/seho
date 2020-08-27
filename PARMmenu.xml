@@ -16,12 +16,12 @@
 
             <contentsScriptCode><![CDATA[
 import seho
-return hou.Parm.ContextMenu( kwargs ).MenuItems_BlendParms
+return hou.Parm.ContextMenu_BlendParms( kwargs ).MenuItems_BlendParms
 ]]></contentsScriptCode>
 
             <scriptCode><![CDATA[
 import seho
-hou.Parm.ContextMenu( kwargs )._exec()
+hou.Parm.ContextMenu_BlendParms( kwargs )._exec()
 ]]></scriptCode>
 
         </scriptMenuStripDynamic>

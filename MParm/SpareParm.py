@@ -51,6 +51,8 @@ def _parm_addParm( self,
                         insert_at_top = False,
                         insert_before = None, 
                         insert_after = None, 
+
+                        as_parm = False
                     ):
     """
     Add new parameter.
@@ -105,8 +107,11 @@ def _parm_addParm( self,
 
     self.setParmTemplateGroup( grp, rename_conflicting_parms=True )
 
-    return new_parmTmp
-setAttr( hou.Node, 'addParm', _parm_addParm, replace=False )
+    if as_parm:
+        return self._[ new_parmTmp.Name ]
+    else:
+        return new_parmTmp
+setAttr( hou.Node, 'addParm', _parm_addParm, replace=True )
 
 
 
@@ -159,14 +164,20 @@ def _parm_addBtn( self,
 
                         join_with_next = join_with_next,
                     )
+
+    # if join_with_next:
+    #     new_tmp.setJoinWithNext( True )
+
     return self.addParm( new_tmp, **kwargs )
-setAttr( hou.Node, 'addBtn', _parm_addBtn )
+setAttr( hou.Node, 'addBtn', _parm_addBtn, replace=True )
 
 
 
 def _parm_addMenu( self,
                         name = 'menu', label = 'Menu',
                         menu_items = None,
+
+                        default = 0,
 
                         hidden = False,
 
@@ -192,10 +203,17 @@ def _parm_addMenu( self,
         menu_values = menu_labels = ()
 
 
+    # get default
+    if isinstance( default, str ):
+        default = menu_values.index( default )
+
+
     # new parm template
     new_tmp = hou.MenuParmTemplate( 
                         name = name, label = label,
                         menu_items = menu_values, menu_labels = menu_labels,
+
+                        default_value = default,
 
                         is_hidden = hidden,
 
@@ -205,7 +223,7 @@ def _parm_addMenu( self,
 
                         join_with_next = join_with_next,
                     )
-setAttr( hou.Node, 'addMenu', _parm_addMenu, replace=False )
+setAttr( hou.Node, 'addMenu', _parm_addMenu, replace=True )
 
 
 
@@ -499,18 +517,19 @@ setAttr( hou.Node, 'addLabel', _parm_addLabel, replace=False )
 
 
 def _parm_addToggle( self,
-                        name = 'toggle', label = 'toggle',
+                        name = 'toggle', label = 'toggle', label_hidden = False,
                         default = True,
 
                         hidden = False,
 
                         tags = {},
                         help_info = None,
+                        callback = None, callback_language = hou.scriptLanguage.Python,
 
                         join_with_next = False,
 
                         **kwargs
-            ):
+                    ):
     """
     Add new toggle.
 
@@ -519,18 +538,73 @@ def _parm_addToggle( self,
     Author: Sean
     """
     new_tmp = hou.ToggleParmTemplate( 
-                        name = name, label = label, 
+                        name = name, label = label, is_label_hidden = label_hidden,
                         default_value = default,
 
                         is_hidden = hidden,
 
                         tags = tags,
                         help = help_info,
+                        script_callback = callback, script_callback_language = callback_language,
 
                         join_with_next = join_with_next,
                     )
     return self.addParm( new_tmp, **kwargs )
-setAttr( hou.Node, 'addToggle', _parm_addToggle )
+setAttr( hou.Node, 'addToggle', _parm_addToggle, replace=True )
+
+
+
+def _parm_addRamp( self, 
+                        name = 'ramp', label = 'ramp',
+
+                        hidden = False,
+
+                        tags = {},
+                        help_info = None,
+
+                        **kwargs
+                    ):
+    """         
+    hou.RampParmTemplate        http://www.sidefx.com/docs/houdini/hom/hou/RampParmTemplate.html
+    """
+    new_tmp = hou.RampParmTemplate(
+                        name = name, label = label,
+                        ramp_parm_type = hou.rampParmType.Float,
+
+                        is_hidden = hidden,
+
+                        tags = tags,
+                        help = help_info,
+                    )
+    return self.addParm( new_tmp, **kwargs )
+setAttr( hou.Node, 'addRamp', _parm_addRamp, replace=True )
+
+
+
+def _parm_addColorRamp( self, 
+                        name = 'ramp', label = 'ramp',
+
+                        hidden = False,
+
+                        tags = {},
+                        help_info = None,
+
+                        **kwargs
+                    ):
+    """         
+    hou.RampParmTemplate        http://www.sidefx.com/docs/houdini/hom/hou/RampParmTemplate.html
+    """
+    new_tmp = hou.RampParmTemplate(
+                        name = name, label = label,
+                        ramp_parm_type = hou.rampParmType.Color,
+
+                        is_hidden = hidden,
+
+                        tags = tags,
+                        help = help_info,
+                    )
+    return self.addParm( new_tmp, **kwargs )
+setAttr( hou.Node, 'addColorRamp', _parm_addColorRamp, replace=True )
 
 
 
@@ -541,8 +615,21 @@ def _parm_addMultiParm( self,
                         tags = {},
                         callback = None, callback_language = hou.scriptLanguage.Python, 
 
+                        extra_justBorn = False,
+
                         **kwargs
                     ):
+    # ~~~~~~ create extra parm templates ~~~~~~ #
+    if extra_justBorn:
+        parm_justBorn = hou.ToggleParmTemplate( 
+                        name = name + '__justBorn#', label = 'Just Born',
+                        default_value = True,
+                        is_hidden = True
+                    )
+    
+        parm_templates = [ parm_justBorn ] + list(parm_templates)
+
+
     # new parm template
     new_tmp = hou.FolderParmTemplate( 
                         name = name, label = label, 
@@ -557,7 +644,7 @@ def _parm_addMultiParm( self,
         new_tmp.CallbackLanguage = callback_language
 
     return self.addParm( new_tmp, **kwargs )
-setAttr( hou.Node, 'addMultiParm', _parm_addMultiParm, replace=False )
+setAttr( hou.Node, 'addMultiParm', _parm_addMultiParm, replace=True )
 
 
 
@@ -597,7 +684,7 @@ def _parm_addFolder( self,
                     )
 
     return self.addParm( new_tmp, **kwargs )
-setAttr( hou.Node, 'addFolder', _parm_addFolder, replace=False )
+setAttr( hou.Node, 'addFolder', _parm_addFolder, replace=True )
 
 
 

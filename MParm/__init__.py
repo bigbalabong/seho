@@ -5,8 +5,8 @@ Tier: Base
 from . import ParmTemplate
 reload(ParmTemplate)
 
-from . import ParmTemplateRamp
-reload(ParmTemplateRamp)
+from . import Ramp
+reload(Ramp)
 
 
 

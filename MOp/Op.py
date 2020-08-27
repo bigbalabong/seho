@@ -234,12 +234,18 @@ setAttr( hou.Node, 'newNode', _node_newNode )
 
 
 def _node_newContexts( self, contexts=None, P=None ):
-    '''
-    PARMS:
-            contexts (list/tuple)  -  ('mat', 'shop', 'rop', 'cop', 'chop', 'top')
+    """[summary]
+
+    Args:
+        contexts (list of str, optional): ('mat', 'shop', 'rop', 'cop', 'chop', 'top').
+                                            Defaults to None.
+        P ([type], optional): [description]. Defaults to None.
+
+    Returns:
+        [type]: [description]
 
     Author: Sean
-    '''
+    """
     # get contexts
     if contexts:
         contexts = [ hou.NodeType.Occupation.Context[i] for i in contexts ] 
